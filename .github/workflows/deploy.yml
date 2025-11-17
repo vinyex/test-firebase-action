@@ -35,11 +35,7 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          node scripts/set-status.js \\
-            staging \\
-            fastapi \\
-            maintenance \\
-            "API deployment in progress..."
+          node scripts/set-status.js staging fastapi maintenance "API deployment in progress..."
 
       # Safe guard: Print instructions if secret is not set
       - name: Print instructions (no Firestore secret)
@@ -77,11 +73,7 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          node scripts/set-status.js \\
-            staging \\
-            fastapi \\
-            online \\
-            "Deployment completed successfully"
+          node scripts/set-status.js staging fastapi online "Deployment completed successfully"
 
       # STEP 3b: Set status to ERROR (on failure)
       - name: Set status to error
@@ -89,8 +81,4 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          node scripts/set-status.js \\
-            staging \\
-            fastapi \\
-            error \\
-            "Deployment failed"
+          node scripts/set-status.js staging fastapi error "Deployment failed"
