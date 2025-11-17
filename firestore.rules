@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // System status collection
+    // Allows public read access for status display
+    // Denies all write access (only server-side writes via Admin SDK)
+    match /system-status/{document} {
+      // Anyone can read the status
+      allow read: if true;
+      
+      // No client-side writes allowed
+      // Status updates should only come from GitHub Actions via Admin SDK
+      allow write: if false;
+    }
+    
+    // Default deny all for other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
