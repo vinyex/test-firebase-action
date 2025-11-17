@@ -1,0 +1,82 @@
+name: Deploy with Status Updates
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      # Install dependencies for the status script
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install
+      
+      # STEP 1: Set status to MAINTENANCE
+      - name: Set status to maintenance
+        if: env.FIREBASE_SERVICE_ACCOUNT != ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node scripts/set-status.js maintenance "Deployment in progress"
+      
+      # Safe guard: Print instructions if secret is not set
+      - name: Print instructions (no Firestore secret)
+        if: env.FIREBASE_SERVICE_ACCOUNT == ''
+        run: |
+          echo "⚠️  FIREBASE_SERVICE_ACCOUNT secret is not set."
+          echo ""
+          echo "To enable Firestore status updates:"
+          echo "1. Go to your Firebase Console"
+          echo "2. Navigate to Project Settings > Service Accounts"
+          echo "3. Generate a new private key"
+          echo "4. Base64 encode the JSON file: cat service-account.json | base64 -w 0"
+          echo "5. Add the base64 string as a GitHub secret named FIREBASE_SERVICE_ACCOUNT"
+          echo ""
+          echo "For now, the workflow will continue without updating Firestore."
+      
+      # STEP 2: Run your deployment (example placeholder)
+      - name: Run deployment
+        id: deploy
+        run: |
+          echo "🚀 Starting deployment..."
+          # Add your actual deployment commands here
+          # For example:
+          # - Build your application
+          # - Run tests
+          # - Deploy to your hosting service
+          
+          # Simulated deployment
+          sleep 3
+          echo "✓ Deployment completed successfully"
+      
+      # STEP 3a: Set status to ONLINE (on success)
+      - name: Set status to online
+        if: success() && env.FIREBASE_SERVICE_ACCOUNT != ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node scripts/set-status.js online "Deployment completed successfully"
+      
+      # STEP 3b: Set status to ERROR (on failure)
+      - name: Set status to error
+        if: failure() && env.FIREBASE_SERVICE_ACCOUNT != ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node scripts/set-status.js error "Deployment failed"
